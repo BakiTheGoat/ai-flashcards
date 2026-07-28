@@ -140,9 +140,63 @@ fileInput.addEventListener("change", () => {
 // GENERATE
 // ---------------------------------------------------------------
 
+// Phone camera photos are often 5-10+ MB, which can be slow to
+// upload and slow for free-tier servers to process (OCR especially).
+// This shrinks/compresses an image in the browser before sending it,
+// which is usually more than enough resolution for reading text.
+function resizeImageFile(file, maxDimension = 1600, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      let { width, height } = img;
+
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          height = Math.round(height * (maxDimension / width));
+          width = maxDimension;
+        } else {
+          width = Math.round(width * (maxDimension / height));
+          height = maxDimension;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(objectUrl);
+          if (!blob) {
+            reject(new Error("Could not process image"));
+            return;
+          }
+          const resizedFile = new File([blob], file.name.replace(/\.\w+$/, ".jpg"), {
+            type: "image/jpeg"
+          });
+          resolve(resizedFile);
+        },
+        "image/jpeg",
+        quality
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Could not load image"));
+    };
+
+    img.src = objectUrl;
+  });
+}
+
 generateBtn.addEventListener("click", async () => {
   const notes = notesInput.value.trim();
-  const file = fileInput.files[0];
+  let file = fileInput.files[0];
 
   statusMsg.textContent = "";
   flashcardArea.innerHTML = "";
@@ -157,11 +211,23 @@ generateBtn.addEventListener("click", async () => {
   generateBtn.disabled = true;
   generateBtn.textContent = "Generating...";
   statusMsg.style.color = "#666";
-  statusMsg.textContent = file
-    ? "Reading your file and asking AI to generate flashcards..."
-    : "Asking AI to read your notes...";
 
   try {
+    // Shrink large images (like phone camera photos) before uploading
+    if (file && file.type && file.type.startsWith("image/")) {
+      statusMsg.textContent = "Preparing your image...";
+      try {
+        file = await resizeImageFile(file);
+      } catch (resizeErr) {
+        // If resizing fails for any reason, fall back to the original file
+        console.warn("Image resize failed, using original file:", resizeErr);
+      }
+    }
+
+    statusMsg.textContent = file
+      ? "Reading your file and asking AI to generate flashcards..."
+      : "Asking AI to read your notes...";
+
     const formData = new FormData();
     formData.append("notes", notes);
     if (file) {
