@@ -1,0 +1,268 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f4f6f9;
+  margin: 0;
+  padding: 40px 20px;
+  color: #222;
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #666;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 14px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.history-bar {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.text-link-btn {
+  background: none;
+  border: none;
+  color: #4b5efc;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.text-link-btn:hover {
+  text-decoration: underline;
+}
+
+.history-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.history-chip {
+  flex: 0 0 auto;
+  background: #eef0ff;
+  border: 1px solid #c9cdfb;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  max-width: 220px;
+  position: relative;
+  transition: background 0.15s;
+}
+
+.history-chip:hover {
+  background: #dfe2ff;
+}
+
+.history-chip .chip-title {
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.history-chip .chip-meta {
+  font-size: 11px;
+  color: #777;
+  display: block;
+  margin-top: 2px;
+}
+
+.history-chip .chip-delete {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px;
+}
+
+.history-chip .chip-delete:hover {
+  color: #b00020;
+}
+
+.upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.file-label {
+  background: #eef0ff;
+  color: #4b5efc;
+  border: 1px dashed #4b5efc;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.file-label:hover {
+  background: #dfe2ff;
+}
+
+#fileInput {
+  display: none;
+}
+
+.file-name {
+  font-size: 13px;
+  color: #555;
+}
+
+button {
+  display: block;
+  margin: 16px auto;
+  padding: 12px 28px;
+  font-size: 16px;
+  background: #4b5efc;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #3b4bd8;
+}
+
+button:disabled {
+  background: #a5a8c9;
+  cursor: not-allowed;
+}
+
+.mode-row {
+  display: flex;
+  justify-content: center;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+
+.secondary-btn {
+  background: white;
+  color: #4b5efc;
+  border: 1px solid #4b5efc;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary-btn:hover {
+  background: #eef0ff;
+}
+
+#statusMsg {
+  text-align: center;
+  min-height: 20px;
+  color: #b00020;
+  font-weight: 500;
+}
+
+#flashcardArea {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* --- Flip card --- */
+.card {
+  perspective: 1000px;
+  height: 160px;
+  cursor: pointer;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front, .card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 15px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.card-front {
+  background: #4b5efc;
+  color: white;
+}
+
+.card-back {
+  background: #ffffff;
+  border: 2px solid #4b5efc;
+  transform: rotateY(180deg);
+}
+
+.card-hint {
+  text-align: center;
+  font-size: 12px;
+  color: #999;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}

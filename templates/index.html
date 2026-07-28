@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Flashcard Generator</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <h1>📚 AI Flashcard Generator</h1>
+    <p class="subtitle">Paste your notes, or upload a .txt, PDF, or picture of your notes.</p>
+
+    <div class="history-bar" id="historyBar" style="display:none;">
+      <div class="history-header">
+        <span>🕘 Recent flashcard sets</span>
+        <button id="clearHistoryBtn" class="text-link-btn">Clear all</button>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <textarea id="notesInput" placeholder="Paste your notes here... (e.g. your database systems or networking notes)"></textarea>
+
+    <div class="upload-row">
+      <label for="fileInput" class="file-label">
+        📎 Choose a file (.txt, .pdf, image, or a saved .json set)
+      </label>
+      <input type="file" id="fileInput" accept=".txt,.pdf,.json,image/png,image/jpeg,image/webp,image/gif">
+      <span id="fileName" class="file-name"></span>
+    </div>
+
+    <button id="generateBtn">Generate Flashcards</button>
+
+    <div class="mode-row" id="modeRow" style="display:none;">
+      <button id="flipModeBtn" class="secondary-btn">🔄 Show Meaning First</button>
+      <button id="saveBtn" class="secondary-btn">💾 Save Flashcards</button>
+    </div>
+
+    <p id="statusMsg"></p>
+
+    <div id="flashcardArea"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

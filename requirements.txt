@@ -1,0 +1,6 @@
+flask
+anthropic
+pypdf
+pytesseract
+Pillow
+gunicorn
