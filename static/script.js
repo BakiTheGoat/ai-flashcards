@@ -10,12 +10,63 @@ const saveBtn = document.getElementById("saveBtn");
 const historyBar = document.getElementById("historyBar");
 const historyList = document.getElementById("historyList");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+const themeToggleBtn = document.getElementById("themeToggleBtn");
+const searchRow = document.getElementById("searchRow");
+const searchInput = document.getElementById("searchInput");
+const studyModeBtn = document.getElementById("studyModeBtn");
+
+// Study overlay elements
+const studyOverlay = document.getElementById("studyOverlay");
+const studyCloseBtn = document.getElementById("studyCloseBtn");
+const studyProgress = document.getElementById("studyProgress");
+const unlearnedOnlyToggle = document.getElementById("unlearnedOnlyToggle");
+const studyCard = document.getElementById("studyCard");
+const studyCardFront = document.getElementById("studyCardFront");
+const studyCardBack = document.getElementById("studyCardBack");
+const studyPrevBtn = document.getElementById("studyPrevBtn");
+const studyNextBtn = document.getElementById("studyNextBtn");
+const studyShuffleBtn = document.getElementById("studyShuffleBtn");
+const studyLearningBtn = document.getElementById("studyLearningBtn");
+const studyKnownBtn = document.getElementById("studyKnownBtn");
 
 let currentFlashcards = [];
 let showMeaningFirst = false; // false = term first (default), true = meaning first
 
 const HISTORY_KEY = "flashcard_history";
+const THEME_KEY = "flashcard_theme";
 const MAX_HISTORY_ITEMS = 15;
+
+// ---------------------------------------------------------------
+// DARK MODE
+// ---------------------------------------------------------------
+
+function applyTheme(theme) {
+  if (theme === "dark") {
+    document.documentElement.setAttribute("data-theme", "dark");
+    themeToggleBtn.textContent = "☀️";
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+    themeToggleBtn.textContent = "🌙";
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved) {
+    applyTheme(saved);
+  } else if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
+    applyTheme("dark");
+  }
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  const next = isDark ? "light" : "dark";
+  applyTheme(next);
+  localStorage.setItem(THEME_KEY, next);
+});
+
+initTheme();
 
 // ---------------------------------------------------------------
 // HISTORY (saved in this browser only, via localStorage)
@@ -99,13 +150,9 @@ function renderHistory() {
 
     chip.addEventListener("click", (e) => {
       if (e.target.classList.contains("chip-delete")) return;
-      currentFlashcards = entry.flashcards;
-      showMeaningFirst = false;
-      updateFlipModeLabel();
-      modeRow.style.display = "flex";
-      statusMsg.style.color = "#2e7d32";
+      loadFlashcardSet(entry.flashcards);
+      statusMsg.style.color = "var(--success)";
       statusMsg.textContent = `Loaded ${entry.flashcards.length} flashcards from history.`;
-      renderFlashcards(currentFlashcards);
     });
 
     chip.querySelector(".chip-delete").addEventListener("click", () => {
@@ -121,7 +168,6 @@ clearHistoryBtn.addEventListener("click", () => {
   renderHistory();
 });
 
-// Show history on page load
 renderHistory();
 
 // ---------------------------------------------------------------
@@ -137,13 +183,9 @@ fileInput.addEventListener("change", () => {
 });
 
 // ---------------------------------------------------------------
-// GENERATE
+// IMAGE RESIZE (before upload - see earlier notes on phone photos)
 // ---------------------------------------------------------------
 
-// Phone camera photos are often 5-10+ MB, which can be slow to
-// upload and slow for free-tier servers to process (OCR especially).
-// This shrinks/compresses an image in the browser before sending it,
-// which is usually more than enough resolution for reading text.
 function resizeImageFile(file, maxDimension = 1000, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -194,6 +236,10 @@ function resizeImageFile(file, maxDimension = 1000, quality = 0.7) {
   });
 }
 
+// ---------------------------------------------------------------
+// GENERATE
+// ---------------------------------------------------------------
+
 generateBtn.addEventListener("click", async () => {
   const notes = notesInput.value.trim();
   let file = fileInput.files[0];
@@ -201,25 +247,24 @@ generateBtn.addEventListener("click", async () => {
   statusMsg.textContent = "";
   flashcardArea.innerHTML = "";
   modeRow.style.display = "none";
+  searchRow.style.display = "none";
 
   if (!notes && !file) {
-    statusMsg.style.color = "#b00020";
+    statusMsg.style.color = "var(--error)";
     statusMsg.textContent = "Please paste some notes or upload a file first.";
     return;
   }
 
   generateBtn.disabled = true;
   generateBtn.textContent = "Generating...";
-  statusMsg.style.color = "#666";
+  statusMsg.style.color = "var(--text-muted)";
 
   try {
-    // Shrink large images (like phone camera photos) before uploading
     if (file && file.type && file.type.startsWith("image/")) {
       statusMsg.textContent = "Preparing your image...";
       try {
         file = await resizeImageFile(file);
       } catch (resizeErr) {
-        // If resizing fails for any reason, fall back to the original file
         console.warn("Image resize failed, using original file:", resizeErr);
       }
     }
@@ -242,31 +287,37 @@ generateBtn.addEventListener("click", async () => {
     const data = await response.json();
 
     if (!response.ok) {
-      statusMsg.style.color = "#b00020";
+      statusMsg.style.color = "var(--error)";
       statusMsg.textContent = data.error || "Something went wrong.";
       return;
     }
 
-    statusMsg.style.color = "#2e7d32";
+    statusMsg.style.color = "var(--success)";
     statusMsg.textContent = `Generated ${data.flashcards.length} flashcards. Click a card to flip it.`;
 
-    currentFlashcards = data.flashcards;
-    showMeaningFirst = false;
-    updateFlipModeLabel();
-    modeRow.style.display = data.flashcards.length > 0 ? "flex" : "none";
-    renderFlashcards(currentFlashcards);
-
-    // Automatically keep this set in the history bar for next time
+    loadFlashcardSet(data.flashcards);
     saveToHistory(currentFlashcards);
 
   } catch (err) {
-    statusMsg.style.color = "#b00020";
+    statusMsg.style.color = "var(--error)";
     statusMsg.textContent = "Could not reach the server. Is the Flask app running?";
   } finally {
     generateBtn.disabled = false;
     generateBtn.textContent = "Generate Flashcards";
   }
 });
+
+// Shared helper: load a flashcard set into the UI (used by generate + history + json upload)
+function loadFlashcardSet(flashcards) {
+  currentFlashcards = flashcards;
+  showMeaningFirst = false;
+  updateFlipModeLabel();
+  modeRow.style.display = flashcards.length > 0 ? "flex" : "none";
+  searchRow.style.display = flashcards.length > 0 ? "block" : "none";
+  searchInput.value = "";
+  resetProgress();
+  renderFlashcards(currentFlashcards);
+}
 
 // ---------------------------------------------------------------
 // FLIP MODE TOGGLE
@@ -275,7 +326,7 @@ generateBtn.addEventListener("click", async () => {
 flipModeBtn.addEventListener("click", () => {
   showMeaningFirst = !showMeaningFirst;
   updateFlipModeLabel();
-  renderFlashcards(currentFlashcards);
+  renderFlashcards(getFilteredCards());
 });
 
 function updateFlipModeLabel() {
@@ -285,7 +336,25 @@ function updateFlipModeLabel() {
 }
 
 // ---------------------------------------------------------------
-// SAVE TO FILE (separate from history - this is a downloadable backup)
+// SEARCH / FILTER (grid view)
+// ---------------------------------------------------------------
+
+function getFilteredCards() {
+  const query = searchInput.value.trim().toLowerCase();
+  if (!query) return currentFlashcards;
+  return currentFlashcards.filter(
+    (c) =>
+      c.question.toLowerCase().includes(query) ||
+      c.answer.toLowerCase().includes(query)
+  );
+}
+
+searchInput.addEventListener("input", () => {
+  renderFlashcards(getFilteredCards());
+});
+
+// ---------------------------------------------------------------
+// SAVE TO FILE
 // ---------------------------------------------------------------
 
 saveBtn.addEventListener("click", () => {
@@ -306,7 +375,7 @@ saveBtn.addEventListener("click", () => {
 });
 
 // ---------------------------------------------------------------
-// RENDER
+// GRID RENDER
 // ---------------------------------------------------------------
 
 function renderFlashcards(flashcards) {
@@ -341,3 +410,134 @@ function escapeHtml(text) {
   div.textContent = text;
   return div.innerHTML;
 }
+
+// ---------------------------------------------------------------
+// STUDY MODE (shuffle + keyboard nav + known/learning progress)
+// ---------------------------------------------------------------
+// Progress is tracked in-memory per session, keyed by card question
+// text. It resets when you generate/load a new set - this keeps
+// things simple and avoids extra storage complexity.
+
+let studyDeck = [];
+let studyIndex = 0;
+let studyFlipped = false;
+let cardProgress = {}; // { questionText: "known" | "learning" }
+
+function resetProgress() {
+  cardProgress = {};
+}
+
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function openStudyMode() {
+  if (currentFlashcards.length === 0) return;
+  studyDeck = shuffleArray(currentFlashcards);
+  studyIndex = 0;
+  studyFlipped = false;
+  unlearnedOnlyToggle.checked = false;
+  studyOverlay.style.display = "flex";
+  renderStudyCard();
+}
+
+function closeStudyMode() {
+  studyOverlay.style.display = "none";
+}
+
+function getActiveStudyDeck() {
+  if (unlearnedOnlyToggle.checked) {
+    const filtered = studyDeck.filter((c) => cardProgress[c.question] !== "known");
+    return filtered.length > 0 ? filtered : studyDeck;
+  }
+  return studyDeck;
+}
+
+function renderStudyCard() {
+  const deck = getActiveStudyDeck();
+  if (studyIndex >= deck.length) studyIndex = 0;
+  if (studyIndex < 0) studyIndex = deck.length - 1;
+
+  const card = deck[studyIndex];
+  if (!card) return;
+
+  const termOnly = card.question.replace(/^What is\s+/i, "").replace(/\?$/, "");
+  const frontText = showMeaningFirst ? card.answer : card.question;
+  const backText = showMeaningFirst ? termOnly : card.answer;
+
+  studyCardFront.textContent = frontText;
+  studyCardBack.textContent = backText;
+  studyFlipped = false;
+  studyCard.classList.remove("flipped");
+
+  const knownCount = studyDeck.filter((c) => cardProgress[c.question] === "known").length;
+  studyProgress.textContent = `Card ${studyIndex + 1} of ${deck.length} · ${knownCount}/${studyDeck.length} known`;
+}
+
+function studyFlip() {
+  studyFlipped = !studyFlipped;
+  studyCard.classList.toggle("flipped", studyFlipped);
+}
+
+function studyNext() {
+  const deck = getActiveStudyDeck();
+  studyIndex = (studyIndex + 1) % deck.length;
+  renderStudyCard();
+}
+
+function studyPrev() {
+  const deck = getActiveStudyDeck();
+  studyIndex = (studyIndex - 1 + deck.length) % deck.length;
+  renderStudyCard();
+}
+
+function markCurrentCard(status) {
+  const deck = getActiveStudyDeck();
+  const card = deck[studyIndex];
+  if (!card) return;
+  cardProgress[card.question] = status;
+  studyNext();
+}
+
+studyModeBtn.addEventListener("click", openStudyMode);
+studyCloseBtn.addEventListener("click", closeStudyMode);
+studyCard.addEventListener("click", studyFlip);
+studyPrevBtn.addEventListener("click", studyPrev);
+studyNextBtn.addEventListener("click", studyNext);
+studyShuffleBtn.addEventListener("click", () => {
+  studyDeck = shuffleArray(studyDeck);
+  studyIndex = 0;
+  renderStudyCard();
+});
+studyKnownBtn.addEventListener("click", () => markCurrentCard("known"));
+studyLearningBtn.addEventListener("click", () => markCurrentCard("learning"));
+unlearnedOnlyToggle.addEventListener("change", () => {
+  studyIndex = 0;
+  renderStudyCard();
+});
+
+// Keyboard shortcuts, only active while Study Mode is open
+document.addEventListener("keydown", (e) => {
+  if (studyOverlay.style.display !== "flex") return;
+
+  if (e.key === "Escape") {
+    closeStudyMode();
+  } else if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    studyFlip();
+  } else if (e.key === "ArrowRight") {
+    studyNext();
+  } else if (e.key === "ArrowLeft") {
+    studyPrev();
+  }
+});
+
+// Click outside the panel closes it too
+studyOverlay.addEventListener("click", (e) => {
+  if (e.target === studyOverlay) closeStudyMode();
+});

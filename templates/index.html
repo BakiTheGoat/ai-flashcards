@@ -9,7 +9,10 @@
 <body>
 
   <div class="container">
-    <h1>📚 AI Flashcard Generator</h1>
+    <div class="top-bar">
+      <h1>📚 AI Flashcard Generator</h1>
+      <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle dark mode">🌙</button>
+    </div>
     <p class="subtitle">Paste your notes, or upload a .txt, PDF, or picture of your notes.</p>
 
     <div class="history-bar" id="historyBar" style="display:none;">
@@ -34,12 +37,52 @@
 
     <div class="mode-row" id="modeRow" style="display:none;">
       <button id="flipModeBtn" class="secondary-btn">🔄 Show Meaning First</button>
+      <button id="studyModeBtn" class="secondary-btn">🎓 Study Mode</button>
       <button id="saveBtn" class="secondary-btn">💾 Save Flashcards</button>
+    </div>
+
+    <div class="search-row" id="searchRow" style="display:none;">
+      <input type="text" id="searchInput" placeholder="🔍 Search this set...">
     </div>
 
     <p id="statusMsg"></p>
 
     <div id="flashcardArea"></div>
+  </div>
+
+  <!-- Study Mode overlay -->
+  <div id="studyOverlay" class="study-overlay" style="display:none;">
+    <div class="study-panel">
+      <button id="studyCloseBtn" class="study-close-btn" title="Close (Esc)">✕</button>
+
+      <div class="study-top-row">
+        <span id="studyProgress" class="study-progress"></span>
+        <label class="study-filter-label">
+          <input type="checkbox" id="unlearnedOnlyToggle">
+          Show unlearned only
+        </label>
+      </div>
+
+      <div class="study-card" id="studyCard">
+        <div class="study-card-inner" id="studyCardInner">
+          <div class="study-card-front" id="studyCardFront"></div>
+          <div class="study-card-back" id="studyCardBack"></div>
+        </div>
+      </div>
+
+      <p class="study-hint">Click card or press Space to flip · ← → to navigate</p>
+
+      <div class="study-controls">
+        <button id="studyPrevBtn" class="secondary-btn">← Prev</button>
+        <button id="studyShuffleBtn" class="secondary-btn">🔀 Shuffle</button>
+        <button id="studyNextBtn" class="secondary-btn">Next →</button>
+      </div>
+
+      <div class="study-mark-row">
+        <button id="studyLearningBtn" class="mark-btn mark-learning">↻ Still Learning</button>
+        <button id="studyKnownBtn" class="mark-btn mark-known">✓ Knew It</button>
+      </div>
+    </div>
   </div>
 
   <script src="{{ url_for('static', filename='script.js') }}"></script>
