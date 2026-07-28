@@ -43,10 +43,10 @@ const MAX_HISTORY_ITEMS = 15;
 function applyTheme(theme) {
   if (theme === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    themeToggleBtn.textContent = "☀️";
+    themeToggleBtn.textContent = "☀️ Light";
   } else {
     document.documentElement.removeAttribute("data-theme");
-    themeToggleBtn.textContent = "🌙";
+    themeToggleBtn.textContent = "🌙 Dark";
   }
 }
 

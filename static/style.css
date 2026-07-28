@@ -66,13 +66,17 @@ h1 {
   position: absolute;
   right: 0;
   background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  font-size: 18px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .theme-toggle-btn:hover {
@@ -307,10 +311,12 @@ button:disabled {
   height: 100%;
   transition: transform 0.5s;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 .card.flipped .card-inner {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .card-front, .card-back {
@@ -318,6 +324,7 @@ button:disabled {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: 10px;
   padding: 16px;
   display: flex;
@@ -422,10 +429,12 @@ button:disabled {
   height: 100%;
   transition: transform 0.4s;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 .study-card.flipped .study-card-inner {
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .study-card-front, .study-card-back {
@@ -433,6 +442,7 @@ button:disabled {
   width: 100%;
   height: 100%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: 14px;
   padding: 24px;
   display: flex;
@@ -453,6 +463,7 @@ button:disabled {
   color: var(--text);
   border: 2px solid var(--accent);
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .study-hint {
