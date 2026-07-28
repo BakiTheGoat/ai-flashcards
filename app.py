@@ -119,6 +119,12 @@ def extract_text_from_image_ocr(file_storage):
     If Tesseract isn't on your system PATH, set an environment
     variable TESSERACT_CMD to its full .exe path (Windows) and this
     will pick it up automatically - no code changes needed.
+
+    Also downscales and converts to grayscale before running OCR.
+    Tesseract is memory-hungry, and free hosting tiers (e.g. Render's
+    512MB free plan) can run out of memory and crash on a large color
+    image even after the browser has already resized it. This is a
+    safety net regardless of what the browser sent.
     """
     from PIL import Image
     import pytesseract
@@ -128,6 +134,17 @@ def extract_text_from_image_ocr(file_storage):
         pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
     image = Image.open(file_storage)
+
+    # Safety-net downscale: cap the longest side at 1000px
+    max_dim = 1000
+    if max(image.size) > max_dim:
+        ratio = max_dim / max(image.size)
+        new_size = (int(image.width * ratio), int(image.height * ratio))
+        image = image.resize(new_size, Image.LANCZOS)
+
+    # Grayscale uses far less memory than color for Tesseract to process
+    image = image.convert("L")
+
     text = pytesseract.image_to_string(image)
     return text.strip()
 

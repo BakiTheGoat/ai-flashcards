@@ -144,7 +144,7 @@ fileInput.addEventListener("change", () => {
 // upload and slow for free-tier servers to process (OCR especially).
 // This shrinks/compresses an image in the browser before sending it,
 // which is usually more than enough resolution for reading text.
-function resizeImageFile(file, maxDimension = 1600, quality = 0.82) {
+function resizeImageFile(file, maxDimension = 1000, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
