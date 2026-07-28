@@ -344,6 +344,8 @@ button:disabled {
   background: var(--card-back-bg);
   color: var(--text);
   border: 2px solid var(--accent);
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 .card-hint {
