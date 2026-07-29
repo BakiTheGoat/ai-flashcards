@@ -30,7 +30,7 @@
   --accent-hover: #2E46D9;
   --accent-light: #ECEBFF;
   --accent-light-hover: #DEDBFF;
-  --card-front-bg: linear-gradient(135deg, #3D5AFE 0%, #7B61FF 100%);
+  --card-front-bg: #4C56F0;
   --card-front-text: white;
   --card-back-bg: #FFFFFF;
   --error: #C4402E;
@@ -54,7 +54,7 @@
   --accent-hover: #96A3FF;
   --accent-light: #23273A;
   --accent-light-hover: #2C3149;
-  --card-front-bg: linear-gradient(135deg, #3D5AFE 0%, #7B61FF 100%);
+  --card-front-bg: #5A63F5;
   --card-front-text: white;
   --card-back-bg: #1C1F26;
   --error: #FF7A63;
