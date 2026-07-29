@@ -91,19 +91,37 @@
     <div class="study-panel">
       <button id="quizCloseBtn" class="study-close-btn" title="Close">✕</button>
 
-      <div class="study-top-row">
-        <span id="quizProgress" class="study-progress"></span>
-        <span id="quizScoreLabel" class="study-progress"></span>
+      <!-- Setup screen: choose timer before starting -->
+      <div id="quizSetup" class="quiz-setup">
+        <h3 class="quiz-setup-title">🧠 Quiz Setup</h3>
+        <p class="quiz-setup-label">Time per question:</p>
+        <div class="timer-option-row">
+          <button class="timer-option-btn active" data-seconds="0">No timer</button>
+          <button class="timer-option-btn" data-seconds="10">10s</button>
+          <button class="timer-option-btn" data-seconds="15">15s</button>
+          <button class="timer-option-btn" data-seconds="30">30s</button>
+          <button class="timer-option-btn" data-seconds="60">60s</button>
+        </div>
+        <button id="quizStartBtn" class="secondary-btn" style="margin-top:20px;">Start Quiz →</button>
       </div>
 
-      <p id="quizQuestion" class="quiz-question"></p>
+      <!-- Quiz questions (hidden until Start is pressed) -->
+      <div id="quizPlay" style="display:none;">
+        <div class="study-top-row">
+          <span id="quizProgress" class="study-progress"></span>
+          <span id="quizTimer" class="quiz-timer"></span>
+          <span id="quizScoreLabel" class="study-progress"></span>
+        </div>
 
-      <div id="quizOptions" class="quiz-options"></div>
+        <p id="quizQuestion" class="quiz-question"></p>
 
-      <p id="quizFeedback" class="quiz-feedback"></p>
+        <div id="quizOptions" class="quiz-options"></div>
 
-      <div class="study-controls">
-        <button id="quizNextBtn" class="secondary-btn" style="display:none;">Next Question →</button>
+        <p id="quizFeedback" class="quiz-feedback"></p>
+
+        <div class="study-controls">
+          <button id="quizNextBtn" class="secondary-btn" style="display:none;">Next Question →</button>
+        </div>
       </div>
     </div>
   </div>

@@ -556,12 +556,30 @@ studyOverlay.addEventListener("click", (e) => {
 // ---------------------------------------------------------------
 // Wrong answers are just other cards' real answers from the same
 // set, shuffled in alongside the correct one. Needs at least 4
-// cards so there are enough distractors to pick from.
+// cards so there are enough distractors to pick from. Timer per
+// question is optional - user picks it on a setup screen first.
+
+const quizSetup = document.getElementById("quizSetup");
+const quizPlay = document.getElementById("quizPlay");
+const quizStartBtn = document.getElementById("quizStartBtn");
+const quizTimerEl = document.getElementById("quizTimer");
+const timerOptionBtns = document.querySelectorAll(".timer-option-btn");
 
 let quizDeck = [];
 let quizIndex = 0;
 let quizScore = 0;
 let quizAnswered = false;
+let quizTimerSeconds = 0; // 0 = no timer
+let quizCountdownInterval = null;
+let quizTimeLeft = 0;
+
+timerOptionBtns.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    timerOptionBtns.forEach((b) => b.classList.remove("active"));
+    btn.classList.add("active");
+    quizTimerSeconds = parseInt(btn.dataset.seconds, 10);
+  });
+});
 
 function openQuizMode() {
   if (currentFlashcards.length < 4) {
@@ -570,19 +588,78 @@ function openQuizMode() {
     return;
   }
 
-  quizDeck = shuffleArray(currentFlashcards);
-  quizIndex = 0;
-  quizScore = 0;
   quizOverlay.style.display = "flex";
-  renderQuizQuestion();
+  quizSetup.style.display = "block";
+  quizPlay.style.display = "none";
 }
 
 function closeQuizMode() {
+  stopQuizTimer();
   quizOverlay.style.display = "none";
+}
+
+quizStartBtn.addEventListener("click", () => {
+  quizDeck = shuffleArray(currentFlashcards);
+  quizIndex = 0;
+  quizScore = 0;
+  quizSetup.style.display = "none";
+  quizPlay.style.display = "block";
+  renderQuizQuestion();
+});
+
+function stopQuizTimer() {
+  if (quizCountdownInterval) {
+    clearInterval(quizCountdownInterval);
+    quizCountdownInterval = null;
+  }
+}
+
+function startQuizTimer() {
+  stopQuizTimer();
+  if (quizTimerSeconds <= 0) {
+    quizTimerEl.textContent = "";
+    return;
+  }
+
+  quizTimeLeft = quizTimerSeconds;
+  updateTimerDisplay();
+
+  quizCountdownInterval = setInterval(() => {
+    quizTimeLeft--;
+    updateTimerDisplay();
+    if (quizTimeLeft <= 0) {
+      stopQuizTimer();
+      handleQuizTimeout();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  quizTimerEl.textContent = `⏱ ${quizTimeLeft}s`;
+  quizTimerEl.classList.toggle("timer-low", quizTimeLeft <= 5);
+}
+
+function handleQuizTimeout() {
+  if (quizAnswered) return;
+  quizAnswered = true;
+
+  const card = quizDeck[quizIndex];
+  Array.from(quizOptions.children).forEach((optBtn) => {
+    optBtn.disabled = true;
+    if (optBtn.textContent === card.answer) {
+      optBtn.classList.add("correct");
+    }
+  });
+
+  quizFeedback.textContent = "⏰ Time's up!";
+  quizFeedback.classList.add("wrong-text");
+  quizScoreLabel.textContent = `Score: ${quizScore}/${quizIndex + 1}`;
+  quizNextBtn.style.display = "block";
 }
 
 function renderQuizQuestion() {
   if (quizIndex >= quizDeck.length) {
+    stopQuizTimer();
     renderQuizSummary();
     return;
   }
@@ -612,11 +689,14 @@ function renderQuizQuestion() {
     btn.addEventListener("click", () => selectQuizAnswer(btn, choice, card.answer));
     quizOptions.appendChild(btn);
   });
+
+  startQuizTimer();
 }
 
 function selectQuizAnswer(btn, chosen, correctAnswer) {
   if (quizAnswered) return;
   quizAnswered = true;
+  stopQuizTimer();
 
   const isCorrect = chosen === correctAnswer;
   if (isCorrect) quizScore++;
@@ -640,6 +720,7 @@ function selectQuizAnswer(btn, chosen, correctAnswer) {
 function renderQuizSummary() {
   const pct = Math.round((quizScore / quizDeck.length) * 100);
   quizProgress.textContent = "Quiz complete";
+  quizTimerEl.textContent = "";
   quizScoreLabel.textContent = "";
   quizQuestion.textContent = "";
   quizFeedback.textContent = "";
