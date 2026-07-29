@@ -11,6 +11,11 @@ const historyBar = document.getElementById("historyBar");
 const historyList = document.getElementById("historyList");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
 const themeToggleBtn = document.getElementById("themeToggleBtn");
+const progressBtn = document.getElementById("progressBtn");
+const progressOverlay = document.getElementById("progressOverlay");
+const progressCloseBtn = document.getElementById("progressCloseBtn");
+const clearProgressBtn = document.getElementById("clearProgressBtn");
+const progressList = document.getElementById("progressList");
 const searchRow = document.getElementById("searchRow");
 const searchInput = document.getElementById("searchInput");
 const studyModeBtn = document.getElementById("studyModeBtn");
@@ -836,4 +841,78 @@ quizNextBtn.addEventListener("click", () => {
 
 quizOverlay.addEventListener("click", (e) => {
   if (e.target === quizOverlay) closeQuizMode();
+});
+
+// ---------------------------------------------------------------
+// MY PROGRESS PAGE (browses quiz performance across ALL sets)
+// ---------------------------------------------------------------
+
+function openProgressPage() {
+  renderProgressList();
+  progressOverlay.style.display = "flex";
+}
+
+function closeProgressPage() {
+  progressOverlay.style.display = "none";
+}
+
+function renderProgressList() {
+  const allHistory = loadQuizHistory();
+  const setTitles = Object.keys(allHistory);
+
+  if (setTitles.length === 0) {
+    progressList.innerHTML = `
+      <div class="progress-empty">
+        No quiz attempts yet.<br>
+        Take a Quiz Mode session on any flashcard set to start tracking your progress here.
+      </div>
+    `;
+    return;
+  }
+
+  // Sort sets by most recent activity first
+  const sorted = setTitles
+    .map((title) => ({ title, attempts: allHistory[title] }))
+    .sort((a, b) => new Date(b.attempts[0].timestamp) - new Date(a.attempts[0].timestamp));
+
+  progressList.innerHTML = "";
+
+  sorted.forEach(({ title, attempts }) => {
+    const latest = attempts[0];
+    const best = Math.max(...attempts.map((a) => a.pct));
+
+    let trendBadge = "";
+    if (attempts.length > 1) {
+      const diff = latest.pct - attempts[1].pct;
+      if (diff > 0) trendBadge = `<span class="trend-up">▲ ${diff}%</span>`;
+      else if (diff < 0) trendBadge = `<span class="trend-down">▼ ${Math.abs(diff)}%</span>`;
+      else trendBadge = `<span style="color:var(--text-muted)">— no change</span>`;
+    }
+
+    const item = document.createElement("div");
+    item.className = "progress-item";
+    item.innerHTML = `
+      <div class="progress-item-top">
+        <span class="progress-item-title">${escapeHtml(title)}</span>
+        <span class="progress-item-latest">${latest.pct}%</span>
+      </div>
+      <div class="progress-item-meta">
+        ${attempts.length} attempt${attempts.length > 1 ? "s" : ""} ·
+        best ${best}% ·
+        last ${formatRelativeTime(latest.timestamp)}
+        ${trendBadge ? " · " + trendBadge : ""}
+      </div>
+    `;
+    progressList.appendChild(item);
+  });
+}
+
+progressBtn.addEventListener("click", openProgressPage);
+progressCloseBtn.addEventListener("click", closeProgressPage);
+clearProgressBtn.addEventListener("click", () => {
+  localStorage.removeItem(QUIZ_HISTORY_KEY);
+  renderProgressList();
+});
+progressOverlay.addEventListener("click", (e) => {
+  if (e.target === progressOverlay) closeProgressPage();
 });

@@ -53,8 +53,22 @@ body {
 .top-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
-  position: relative;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.top-bar h1 {
+  margin: 0;
+  flex: 1;
+  text-align: left;
+  font-size: 24px;
+}
+
+.top-bar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 h1 {
@@ -63,8 +77,6 @@ h1 {
 }
 
 .theme-toggle-btn {
-  position: absolute;
-  right: 0;
   background: var(--card-bg);
   color: var(--accent);
   border: 1px solid var(--accent);
@@ -77,6 +89,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 
 .theme-toggle-btn:hover {
@@ -681,4 +694,53 @@ button:disabled {
 
 .quiz-trend-list li {
   padding: 2px 0;
+}
+
+/* --- My Progress overlay --- */
+.progress-list {
+  max-height: 420px;
+  overflow-y: auto;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 30px 0;
+}
+
+.progress-item {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.progress-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.progress-item-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.progress-item-latest {
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.progress-item-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
 }

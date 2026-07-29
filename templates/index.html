@@ -11,7 +11,10 @@
   <div class="container">
     <div class="top-bar">
       <h1>📚 AI Flashcard Generator</h1>
-      <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle dark mode">🌙</button>
+      <div class="top-bar-actions">
+        <button id="progressBtn" class="theme-toggle-btn">📊 Progress</button>
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle dark mode">🌙 Dark</button>
+      </div>
     </div>
     <p class="subtitle">Paste your notes, or upload a .txt, PDF, or picture of your notes.</p>
 
@@ -123,6 +126,20 @@
           <button id="quizNextBtn" class="secondary-btn" style="display:none;">Next Question →</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Progress overlay -->
+  <div id="progressOverlay" class="study-overlay" style="display:none;">
+    <div class="study-panel">
+      <button id="progressCloseBtn" class="study-close-btn" title="Close">✕</button>
+
+      <div class="study-top-row">
+        <h3 class="quiz-setup-title" style="margin:0;">📊 My Progress</h3>
+        <button id="clearProgressBtn" class="text-link-btn">Clear all</button>
+      </div>
+
+      <div id="progressList" class="progress-list"></div>
     </div>
   </div>
 
