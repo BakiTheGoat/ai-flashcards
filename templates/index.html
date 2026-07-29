@@ -46,6 +46,7 @@
       <button id="studyModeBtn" class="secondary-btn">🎓 Study Mode</button>
       <button id="quizModeBtn" class="secondary-btn">🧠 Quiz Mode</button>
       <button id="saveBtn" class="secondary-btn">💾 Save Flashcards</button>
+      <button id="printBtn" class="secondary-btn">🖨️ Print / Export PDF</button>
     </div>
 
     <div class="search-row" id="searchRow" style="display:none;">
@@ -131,6 +132,9 @@
       </div>
     </div>
   </div>
+
+  <!-- Print-only study sheet - invisible on screen, only shows when printing -->
+  <div id="printArea" class="print-area"></div>
 
   <!-- Progress overlay -->
   <div id="progressOverlay" class="study-overlay" style="display:none;">

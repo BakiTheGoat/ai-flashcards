@@ -7,6 +7,8 @@ const flashcardArea = document.getElementById("flashcardArea");
 const modeRow = document.getElementById("modeRow");
 const flipModeBtn = document.getElementById("flipModeBtn");
 const saveBtn = document.getElementById("saveBtn");
+const printBtn = document.getElementById("printBtn");
+const printArea = document.getElementById("printArea");
 const historyBar = document.getElementById("historyBar");
 const historyList = document.getElementById("historyList");
 const clearHistoryBtn = document.getElementById("clearHistoryBtn");
@@ -971,3 +973,43 @@ function launchConfetti(container) {
     piece.addEventListener("animationend", () => piece.remove());
   }
 }
+
+// ---------------------------------------------------------------
+// PRINT / EXPORT AS PDF
+// ---------------------------------------------------------------
+// Uses the browser's native print dialog. Choosing "Save as PDF"
+// as the destination in that dialog produces an actual PDF file -
+// no extra libraries needed. This is separate from "Save
+// Flashcards" (which downloads a .json to reload into the app
+// later) - this one is for printing or handing in as a document.
+
+printBtn.addEventListener("click", () => {
+  if (currentFlashcards.length === 0) {
+    statusMsg.style.color = "var(--error)";
+    statusMsg.textContent = "Generate some flashcards first before printing.";
+    return;
+  }
+
+  const setTitle = getSetTitle(currentFlashcards);
+  const dateStr = new Date().toLocaleDateString();
+
+  const itemsHtml = currentFlashcards
+    .map((card) => {
+      const term = card.question.replace(/^What is\s+/i, "").replace(/\?$/, "");
+      return `
+        <div class="print-item">
+          <div class="print-term">${escapeHtml(term)}</div>
+          <div class="print-meaning">${escapeHtml(card.answer)}</div>
+        </div>
+      `;
+    })
+    .join("");
+
+  printArea.innerHTML = `
+    <div class="print-title">${escapeHtml(setTitle)}</div>
+    <div class="print-subtitle">${currentFlashcards.length} terms · printed ${dateStr}</div>
+    ${itemsHtml}
+  `;
+
+  window.print();
+});
