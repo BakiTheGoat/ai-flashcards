@@ -359,6 +359,10 @@ textarea:focus {
   color: var(--text-muted);
 }
 
+.file-name:empty {
+  display: none;
+}
+
 button {
   position: relative;
   overflow: hidden;
