@@ -202,6 +202,49 @@ fileInput.addEventListener("change", () => {
 });
 
 // ---------------------------------------------------------------
+// DRAG AND DROP (an alternative to clicking "Choose a file" -
+// drops the file into the same fileInput, so everything downstream
+// - resize, upload, generation - works exactly the same either way)
+// ---------------------------------------------------------------
+
+const uploadDropZone = document.getElementById("uploadDropZone");
+let dragCounter = 0;
+
+["dragenter", "dragover"].forEach((eventName) => {
+  uploadDropZone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter++;
+    uploadDropZone.classList.add("drag-active");
+  });
+});
+
+["dragleave", "drop"].forEach((eventName) => {
+  uploadDropZone.addEventListener(eventName, (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter = Math.max(0, dragCounter - 1);
+    if (dragCounter === 0) {
+      uploadDropZone.classList.remove("drag-active");
+    }
+  });
+});
+
+uploadDropZone.addEventListener("drop", (e) => {
+  dragCounter = 0;
+  uploadDropZone.classList.remove("drag-active");
+
+  const droppedFiles = e.dataTransfer.files;
+  if (!droppedFiles || droppedFiles.length === 0) return;
+
+  // Assign the dropped file to the same hidden <input type="file">
+  // used by the "Choose a file" button, so every existing behavior
+  // (naming, resizing, upload) works identically either way.
+  fileInput.files = droppedFiles;
+  fileNameLabel.textContent = droppedFiles[0].name;
+});
+
+// ---------------------------------------------------------------
 // IMAGE RESIZE (before upload - see earlier notes on phone photos)
 // ---------------------------------------------------------------
 

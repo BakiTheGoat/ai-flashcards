@@ -318,6 +318,17 @@ textarea:focus {
   gap: 10px;
   margin-top: 12px;
   flex-wrap: wrap;
+  border-radius: 8px;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.upload-row.drag-active {
+  background: var(--accent-light);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.upload-row.drag-active .file-label {
+  border-style: solid;
 }
 
 .file-label {
