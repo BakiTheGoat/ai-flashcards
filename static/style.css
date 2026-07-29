@@ -1,5 +1,21 @@
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Remove the default click/tap outline box on mouse click, but keep
+   a visible outline for keyboard navigation (accessibility) */
+.card:focus,
+.study-card:focus,
+.quiz-option-btn:focus {
+  outline: none;
+}
+
+.card:focus-visible,
+.study-card:focus-visible,
+.quiz-option-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 :root {
