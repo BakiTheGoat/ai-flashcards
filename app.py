@@ -174,77 +174,68 @@ def generate_mock_flashcards(text):
     pattern matching - but it reads your ACTUAL content so you can
     test the full app pipeline for free.
 
-    Two strategies, applied in order:
-    1. TWO-LINE PAIRS: a short "term" line followed by a line that
-       starts with a lowercase letter (e.g. "Switch" / "connects
-       devices..."). This catches ANY definition phrasing - "is",
-       "connects", "allows", "enables", "controls", etc. - since it
-       doesn't rely on a fixed list of verbs.
-    2. SAME-LINE PATTERNS: "Term refers to X", "Term is/are X",
-       "Term: X" all on one line.
+    Two-step approach:
+    1. MERGE WRAPPED LINES: a line that doesn't end in . ! ? and is
+       followed by a line starting with a lowercase letter almost
+       always means the definition continues onto the next line (a
+       term on its own line, or a paste that wrapped mid-sentence).
+       Those get joined into one line before anything else happens.
+    2. EXTRACT TERM/MEANING: colon patterns ("Term (n): meaning") are
+       checked FIRST, since they're the most explicit and reliable
+       signal. Only if there's no colon do we fall back to "refers
+       to" or "is/are" patterns. Checking colon first prevents a
+       meaning like "...something is or may be divided" from being
+       wrongly split at the word "is" instead of at the colon.
     """
     raw_lines = [l.strip() for l in re.split(r'\n+', text) if l.strip()]
 
-    def looks_like_term_line(line):
-        # A term line is short, has no sentence-ending punctuation,
-        # and doesn't already contain a colon (which would make it
-        # a same-line pattern instead).
-        return (2 <= len(line) <= 60
-                and ":" not in line
-                and not line.endswith((".", "!", "?"))
-                and not looks_like_header(line))
+    # --- Step 1: merge a line with the next one if it looks like the
+    # sentence continues (no ending punctuation, next line starts
+    # lowercase). Repeats so multi-line wraps fully join together.
+    merged_lines = []
+    i = 0
+    while i < len(raw_lines):
+        line = raw_lines[i]
+        while (i + 1 < len(raw_lines)
+               and not line.endswith((".", "!", "?"))
+               and re.match(r'^[a-z]', raw_lines[i + 1])):
+            i += 1
+            line = f"{line} {raw_lines[i]}"
+        merged_lines.append(line)
+        i += 1
 
-    flashcards = []
-    seen_terms = set()
-    used_indices = set()
-
-    # --- Strategy 1: two-line term/definition pairs ---
-    for i in range(len(raw_lines) - 1):
-        if i in used_indices:
-            continue
-        term_line = raw_lines[i]
-        next_line = raw_lines[i + 1]
-
-        if looks_like_term_line(term_line) and re.match(r'^[a-z]', next_line):
-            term = term_line.strip()
-            meaning = next_line.strip()
-            # Clean up leading "is"/"are"/"refers to" so answers read
-            # naturally as a standalone sentence, e.g. "a device that..."
-            meaning = re.sub(r'^(is|are|refers to)\s+', '', meaning, flags=re.IGNORECASE)
-            meaning = meaning.rstrip(".") + "."
-
-            term_key = term.lower()
-            if term_key not in seen_terms:
-                seen_terms.add(term_key)
-                flashcards.append({"question": f"What is {term}?", "answer": meaning})
-            used_indices.add(i)
-            used_indices.add(i + 1)
-
-    # --- Strategy 2: same-line patterns, for anything not already caught ---
-    remaining_lines = [l for idx, l in enumerate(raw_lines) if idx not in used_indices]
+    # --- Step 2: split any line with multiple sentences, then extract ---
     candidates = []
-    for line in remaining_lines:
+    for line in merged_lines:
         for piece in re.split(r'(?<=[.!?])\s+(?=[A-Z0-9])', line):
             piece = piece.strip()
             if piece:
                 candidates.append(piece)
 
+    # Colon pattern checked FIRST - most explicit and reliable.
     patterns = [
+        r'^\s*(?:\d+[\.\)]\s*)?([^:]{2,60}):\s*(.+)$',
         r'^\s*(?:\d+[\.\)]\s*)?(.+?)\s+refers to\s+(.+)$',
         r'^\s*(?:\d+[\.\)]\s*)?(.+?)\s+(?:is|are)\s+(.+)$',
-        r'^\s*(?:\d+[\.\)]\s*)?([^:]{2,60}):\s*(.+)$',
     ]
+
+    flashcards = []
+    seen_terms = set()
 
     for sentence in candidates:
         sentence = re.sub(r'^\s*\d+[\.\)]\s*', '', sentence).strip()
-        if len(sentence) < 15:
+        if len(sentence) < 8:
             continue
 
         for pattern in patterns:
             m = re.match(pattern, sentence, re.IGNORECASE)
             if m:
                 term = m.group(1).strip().strip('"\'')
-                meaning = m.group(2).strip().rstrip(".") + "."
+                meaning = m.group(2).strip()
+                # Strip a leading is/are/refers-to left over from the
+                # meaning text so answers read as standalone sentences
+                meaning = re.sub(r'^(is|are|refers to)\s+', '', meaning, flags=re.IGNORECASE)
+                meaning = meaning.rstrip(".") + "."
 
                 if len(term) < 2 or len(term) > 60:
                     continue
@@ -326,7 +317,10 @@ def generate_flashcards():
 
         elif ext in ALLOWED_IMAGE_EXTENSIONS:
             if MOCK_MODE:
-                # Free path: OCR the image locally instead of using paid AI vision
+                # Free path: OCR the image locally instead of using paid AI vision.
+                # Note: this can fail on low-memory hosting (like Render's free
+                # tier) since Tesseract needs more RAM than 512MB reliably
+                # provides. Works fine when running locally on your own PC.
                 try:
                     file_text = extract_text_from_image_ocr(uploaded_file)
                 except Exception:
