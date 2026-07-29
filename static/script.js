@@ -740,14 +740,19 @@ function renderQuizSummary() {
   quizNextBtn.style.display = "none";
 
   quizOptions.innerHTML = `
-    <div class="quiz-summary">
+    <div class="quiz-summary" id="quizSummaryBox">
       <div>You scored</div>
-      <div class="score-big">${quizScore} / ${quizDeck.length}</div>
+      <div class="score-big" id="scoreCountUp">0 / ${quizDeck.length}</div>
       <div>${pct}% correct</div>
       ${trendHtml}
       <button id="quizRetryBtn" class="secondary-btn" style="margin-top:16px;">🔁 Try Again</button>
     </div>
   `;
+
+  animateScoreCountUp(quizScore, quizDeck.length);
+  if (pct >= 70) {
+    launchConfetti(document.getElementById("quizSummaryBox"));
+  }
 
   document.getElementById("quizRetryBtn").addEventListener("click", () => {
     quizDeck = shuffleArray(currentFlashcards);
@@ -916,3 +921,53 @@ clearProgressBtn.addEventListener("click", () => {
 progressOverlay.addEventListener("click", (e) => {
   if (e.target === progressOverlay) closeProgressPage();
 });
+
+// ---------------------------------------------------------------
+// QUIZ SUMMARY POLISH (purely visual - doesn't affect scoring,
+// tracking, or any saved data, just how the result is presented)
+// ---------------------------------------------------------------
+
+function animateScoreCountUp(finalScore, total) {
+  const el = document.getElementById("scoreCountUp");
+  if (!el) return;
+
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.textContent = `${finalScore} / ${total}`;
+    return;
+  }
+
+  const duration = 600;
+  const startTime = performance.now();
+
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const current = Math.round(progress * finalScore);
+    el.textContent = `${current} / ${total}`;
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
+}
+
+function launchConfetti(container) {
+  if (!container) return;
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const colors = ["#4C56F0", "#7B61FF", "#FF6B4A", "#4FCB8A", "#FF8464"];
+  const pieceCount = 24;
+
+  for (let i = 0; i < pieceCount; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}%`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDelay = `${Math.random() * 0.3}s`;
+    piece.style.animationDuration = `${1.2 + Math.random() * 0.8}s`;
+    container.appendChild(piece);
+
+    // Clean up after the animation finishes so the DOM doesn't grow
+    piece.addEventListener("animationend", () => piece.remove());
+  }
+}
