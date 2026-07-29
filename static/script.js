@@ -14,6 +14,15 @@ const themeToggleBtn = document.getElementById("themeToggleBtn");
 const searchRow = document.getElementById("searchRow");
 const searchInput = document.getElementById("searchInput");
 const studyModeBtn = document.getElementById("studyModeBtn");
+const quizModeBtn = document.getElementById("quizModeBtn");
+const quizOverlay = document.getElementById("quizOverlay");
+const quizCloseBtn = document.getElementById("quizCloseBtn");
+const quizProgress = document.getElementById("quizProgress");
+const quizScoreLabel = document.getElementById("quizScoreLabel");
+const quizQuestion = document.getElementById("quizQuestion");
+const quizOptions = document.getElementById("quizOptions");
+const quizFeedback = document.getElementById("quizFeedback");
+const quizNextBtn = document.getElementById("quizNextBtn");
 
 // Study overlay elements
 const studyOverlay = document.getElementById("studyOverlay");
@@ -540,4 +549,126 @@ document.addEventListener("keydown", (e) => {
 // Click outside the panel closes it too
 studyOverlay.addEventListener("click", (e) => {
   if (e.target === studyOverlay) closeStudyMode();
+});
+
+// ---------------------------------------------------------------
+// QUIZ MODE (multiple choice - free, no AI needed)
+// ---------------------------------------------------------------
+// Wrong answers are just other cards' real answers from the same
+// set, shuffled in alongside the correct one. Needs at least 4
+// cards so there are enough distractors to pick from.
+
+let quizDeck = [];
+let quizIndex = 0;
+let quizScore = 0;
+let quizAnswered = false;
+
+function openQuizMode() {
+  if (currentFlashcards.length < 4) {
+    statusMsg.style.color = "var(--error)";
+    statusMsg.textContent = "Quiz Mode needs at least 4 flashcards in the set to generate answer choices.";
+    return;
+  }
+
+  quizDeck = shuffleArray(currentFlashcards);
+  quizIndex = 0;
+  quizScore = 0;
+  quizOverlay.style.display = "flex";
+  renderQuizQuestion();
+}
+
+function closeQuizMode() {
+  quizOverlay.style.display = "none";
+}
+
+function renderQuizQuestion() {
+  if (quizIndex >= quizDeck.length) {
+    renderQuizSummary();
+    return;
+  }
+
+  quizAnswered = false;
+  const card = quizDeck[quizIndex];
+
+  // Build 3 wrong answers from other cards, plus the correct one
+  const otherAnswers = currentFlashcards
+    .filter((c) => c.question !== card.question)
+    .map((c) => c.answer);
+  const wrongChoices = shuffleArray(otherAnswers).slice(0, 3);
+  const allChoices = shuffleArray([card.answer, ...wrongChoices]);
+
+  quizProgress.textContent = `Question ${quizIndex + 1} of ${quizDeck.length}`;
+  quizScoreLabel.textContent = `Score: ${quizScore}/${quizIndex}`;
+  quizQuestion.textContent = card.question;
+  quizFeedback.textContent = "";
+  quizFeedback.className = "quiz-feedback";
+  quizNextBtn.style.display = "none";
+
+  quizOptions.innerHTML = "";
+  allChoices.forEach((choice) => {
+    const btn = document.createElement("button");
+    btn.className = "quiz-option-btn";
+    btn.textContent = choice;
+    btn.addEventListener("click", () => selectQuizAnswer(btn, choice, card.answer));
+    quizOptions.appendChild(btn);
+  });
+}
+
+function selectQuizAnswer(btn, chosen, correctAnswer) {
+  if (quizAnswered) return;
+  quizAnswered = true;
+
+  const isCorrect = chosen === correctAnswer;
+  if (isCorrect) quizScore++;
+
+  // Disable all options and reveal correct/wrong
+  Array.from(quizOptions.children).forEach((optBtn) => {
+    optBtn.disabled = true;
+    if (optBtn.textContent === correctAnswer) {
+      optBtn.classList.add("correct");
+    } else if (optBtn === btn) {
+      optBtn.classList.add("wrong");
+    }
+  });
+
+  quizFeedback.textContent = isCorrect ? "✓ Correct!" : "✗ Not quite.";
+  quizFeedback.classList.add(isCorrect ? "correct-text" : "wrong-text");
+  quizScoreLabel.textContent = `Score: ${quizScore}/${quizIndex + 1}`;
+  quizNextBtn.style.display = "block";
+}
+
+function renderQuizSummary() {
+  const pct = Math.round((quizScore / quizDeck.length) * 100);
+  quizProgress.textContent = "Quiz complete";
+  quizScoreLabel.textContent = "";
+  quizQuestion.textContent = "";
+  quizFeedback.textContent = "";
+  quizNextBtn.style.display = "none";
+
+  quizOptions.innerHTML = `
+    <div class="quiz-summary">
+      <div>You scored</div>
+      <div class="score-big">${quizScore} / ${quizDeck.length}</div>
+      <div>${pct}% correct</div>
+      <button id="quizRetryBtn" class="secondary-btn" style="margin-top:16px;">🔁 Try Again</button>
+    </div>
+  `;
+
+  document.getElementById("quizRetryBtn").addEventListener("click", () => {
+    quizDeck = shuffleArray(currentFlashcards);
+    quizIndex = 0;
+    quizScore = 0;
+    renderQuizQuestion();
+  });
+}
+
+quizModeBtn.addEventListener("click", openQuizMode);
+quizCloseBtn.addEventListener("click", closeQuizMode);
+quizNextBtn.addEventListener("click", () => {
+  quizIndex++;
+  renderQuizQuestion();
+});
+
+quizOverlay.addEventListener("click", (e) => {
+  if (e.target === quizOverlay) closeQuizMode();
 });

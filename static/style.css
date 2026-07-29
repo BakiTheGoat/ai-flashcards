@@ -519,3 +519,80 @@ button:disabled {
 .mark-known:hover {
   background: #256a28;
 }
+
+/* --- Quiz Mode --- */
+.quiz-question {
+  font-size: 19px;
+  font-weight: 600;
+  text-align: center;
+  margin: 8px 0 20px 0;
+  min-height: 50px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.quiz-option-btn {
+  margin: 0;
+  width: 100%;
+  text-align: left;
+  background: var(--card-bg);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.quiz-option-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.quiz-option-btn:disabled {
+  cursor: default;
+}
+
+.quiz-option-btn.correct {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.quiz-option-btn.wrong {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+.quiz-feedback {
+  text-align: center;
+  font-weight: 600;
+  min-height: 24px;
+  margin-bottom: 8px;
+}
+
+.quiz-feedback.correct-text {
+  color: var(--success);
+}
+
+.quiz-feedback.wrong-text {
+  color: var(--error);
+}
+
+.quiz-summary {
+  text-align: center;
+}
+
+.quiz-summary .score-big {
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 12px 0;
+}

@@ -38,6 +38,7 @@
     <div class="mode-row" id="modeRow" style="display:none;">
       <button id="flipModeBtn" class="secondary-btn">🔄 Show Meaning First</button>
       <button id="studyModeBtn" class="secondary-btn">🎓 Study Mode</button>
+      <button id="quizModeBtn" class="secondary-btn">🧠 Quiz Mode</button>
       <button id="saveBtn" class="secondary-btn">💾 Save Flashcards</button>
     </div>
 
@@ -81,6 +82,28 @@
       <div class="study-mark-row">
         <button id="studyLearningBtn" class="mark-btn mark-learning">↻ Still Learning</button>
         <button id="studyKnownBtn" class="mark-btn mark-known">✓ Knew It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz Mode overlay -->
+  <div id="quizOverlay" class="study-overlay" style="display:none;">
+    <div class="study-panel">
+      <button id="quizCloseBtn" class="study-close-btn" title="Close">✕</button>
+
+      <div class="study-top-row">
+        <span id="quizProgress" class="study-progress"></span>
+        <span id="quizScoreLabel" class="study-progress"></span>
+      </div>
+
+      <p id="quizQuestion" class="quiz-question"></p>
+
+      <div id="quizOptions" class="quiz-options"></div>
+
+      <p id="quizFeedback" class="quiz-feedback"></p>
+
+      <div class="study-controls">
+        <button id="quizNextBtn" class="secondary-btn" style="display:none;">Next Question →</button>
       </div>
     </div>
   </div>
