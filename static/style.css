@@ -110,6 +110,17 @@ body::after {
   }
 }
 
+/* Blurred, animated backgrounds are expensive to repaint on phone
+   GPUs and can make theme switching (and general scrolling/typing)
+   feel laggy. Turn the effect off on small screens entirely - it's
+   purely decorative, so nothing is lost functionally. */
+@media (max-width: 700px) {
+  body::before,
+  body::after {
+    display: none;
+  }
+}
+
 @keyframes driftOne {
   from { transform: translate(0, 0) scale(1); }
   to { transform: translate(8vw, 6vh) scale(1.15); }
