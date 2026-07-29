@@ -174,18 +174,23 @@ def generate_mock_flashcards(text):
     pattern matching - but it reads your ACTUAL content so you can
     test the full app pipeline for free.
 
-    Two-step approach:
+    Three-step approach:
     1. MERGE WRAPPED LINES: a line that doesn't end in . ! ? and is
        followed by a line starting with a lowercase letter almost
        always means the definition continues onto the next line (a
        term on its own line, or a paste that wrapped mid-sentence).
        Those get joined into one line before anything else happens.
-    2. EXTRACT TERM/MEANING: colon patterns ("Term (n): meaning") are
-       checked FIRST, since they're the most explicit and reliable
-       signal. Only if there's no colon do we fall back to "refers
-       to" or "is/are" patterns. Checking colon first prevents a
-       meaning like "...something is or may be divided" from being
-       wrongly split at the word "is" instead of at the colon.
+    2. Q&A PAIRS: lines explicitly written as "Q: ..." / "A: ..." (or
+       "Question:" / "Answer:") are turned into flashcards using your
+       ORIGINAL wording - no "What is X?" wrapping - since you already
+       phrased the question yourself.
+    3. TERM/MEANING: for everything else, colon patterns
+       ("Term (n): meaning") are checked FIRST, since they're the most
+       explicit and reliable signal. Only if there's no colon do we
+       fall back to "refers to" or "is/are" patterns. Checking colon
+       first prevents a meaning like "...something is or may be
+       divided" from being wrongly split at the word "is" instead of
+       at the colon.
     """
     raw_lines = [l.strip() for l in re.split(r'\n+', text) if l.strip()]
 
@@ -204,9 +209,38 @@ def generate_mock_flashcards(text):
         merged_lines.append(line)
         i += 1
 
-    # --- Step 2: split any line with multiple sentences, then extract ---
+    # --- Step 2: pull out explicit Q&A pairs first, using your exact
+    # wording. A "Q:" line is matched with the very next "A:" line.
+    flashcards = []
+    seen_terms = set()
+    q_pattern = re.compile(r'^(?:Q|Question)\s*[:\.\)]\s*(.+)$', re.IGNORECASE)
+    a_pattern = re.compile(r'^(?:A|Answer)\s*[:\.\)]\s*(.+)$', re.IGNORECASE)
+
+    remaining_lines = []
+    skip_next = False
+    for idx, line in enumerate(merged_lines):
+        if skip_next:
+            skip_next = False
+            continue
+
+        q_match = q_pattern.match(line)
+        if q_match and idx + 1 < len(merged_lines):
+            a_match = a_pattern.match(merged_lines[idx + 1])
+            if a_match:
+                question = q_match.group(1).strip()
+                answer = a_match.group(1).strip().rstrip(".") + "."
+                key = question.lower()
+                if key not in seen_terms:
+                    seen_terms.add(key)
+                    flashcards.append({"question": question, "answer": answer})
+                skip_next = True
+                continue
+
+        remaining_lines.append(line)
+
+    # --- Step 3: split any remaining line with multiple sentences ---
     candidates = []
-    for line in merged_lines:
+    for line in remaining_lines:
         for piece in re.split(r'(?<=[.!?])\s+(?=[A-Z0-9])', line):
             piece = piece.strip()
             if piece:
@@ -218,9 +252,6 @@ def generate_mock_flashcards(text):
         r'^\s*(?:\d+[\.\)]\s*)?(.+?)\s+refers to\s+(.+)$',
         r'^\s*(?:\d+[\.\)]\s*)?(.+?)\s+(?:is|are)\s+(.+)$',
     ]
-
-    flashcards = []
-    seen_terms = set()
 
     for sentence in candidates:
         sentence = re.sub(r'^\s*\d+[\.\)]\s*', '', sentence).strip()
