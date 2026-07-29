@@ -1056,3 +1056,65 @@ printBtn.addEventListener("click", () => {
 
   window.print();
 });
+
+// ---------------------------------------------------------------
+// WELCOME SCREEN (shown first, dismissed on click)
+// ---------------------------------------------------------------
+
+const welcomeScreen = document.getElementById("welcomeScreen");
+const welcomeTypedText = document.getElementById("welcomeTypedText");
+const enterAppBtn = document.getElementById("enterAppBtn");
+
+const motivationalQuotes = [
+  "No cap, consistency beats cramming every time. Let's lock in. 🔥",
+  "Future you is watching. Don't let 3am you down. 📚",
+  "Small flashcards, big brain energy. Let's get it. 🧠",
+  "This is your sign to actually start studying today. ✨",
+  "Cook that exam, not your sleep schedule. 😤",
+  "Main character energy: the one who actually studies. 🎬",
+  "Deadass, one card at a time is how you win. 🚀",
+  "Stay locked in. The results gon' show eventually. 📈",
+  "It's giving 'I got my life together' era. Let's go. 💅",
+  "Level up your brain like it's your favorite game. 🎮",
+  "You're built different. Prove it one flashcard at a time. 💯",
+  "Study now, flex the grades later. 😎",
+  "Big things start with small, boring, consistent reps. 🌱",
+  "Your only competition is who you were yesterday. 🏆",
+  "Lock in for 20 minutes. That's it. Just start. ⏱️",
+];
+
+function typeWriterEffect(text, el, speed = 35) {
+  el.textContent = "";
+  let i = 0;
+
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    el.textContent = text;
+    return;
+  }
+
+  function typeChar() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      setTimeout(typeChar, speed);
+    }
+  }
+  typeChar();
+}
+
+function initWelcomeScreen() {
+  const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  typeWriterEffect(quote, welcomeTypedText);
+}
+
+function dismissWelcomeScreen() {
+  welcomeScreen.classList.add("welcome-hidden");
+  // Fully remove from the accessibility tree / layout after the fade finishes
+  setTimeout(() => {
+    welcomeScreen.style.display = "none";
+  }, 550);
+}
+
+enterAppBtn.addEventListener("click", dismissWelcomeScreen);
+
+initWelcomeScreen();
