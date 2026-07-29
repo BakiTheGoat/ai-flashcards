@@ -651,3 +651,34 @@ button:disabled {
 .quiz-timer.timer-low {
   color: var(--error);
 }
+
+.quiz-trend-note {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.trend-up {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.trend-down {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.quiz-trend-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.quiz-trend-list li {
+  padding: 2px 0;
+}

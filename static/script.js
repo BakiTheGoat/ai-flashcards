@@ -90,15 +90,18 @@ function loadHistory() {
   }
 }
 
+function getSetTitle(flashcards) {
+  const firstTerm = flashcards[0].question.replace(/^What is\s+/i, "").replace(/\?$/, "");
+  return flashcards.length > 1
+    ? `${firstTerm} + ${flashcards.length - 1} more`
+    : firstTerm;
+}
+
 function saveToHistory(flashcards) {
   if (!flashcards || flashcards.length === 0) return;
 
   const history = loadHistory();
-
-  const firstTerm = flashcards[0].question.replace(/^What is\s+/i, "").replace(/\?$/, "");
-  const title = flashcards.length > 1
-    ? `${firstTerm} + ${flashcards.length - 1} more`
-    : firstTerm;
+  const title = getSetTitle(flashcards);
 
   const entry = {
     id: Date.now().toString(),
@@ -719,6 +722,11 @@ function selectQuizAnswer(btn, chosen, correctAnswer) {
 
 function renderQuizSummary() {
   const pct = Math.round((quizScore / quizDeck.length) * 100);
+  const setTitle = getSetTitle(currentFlashcards);
+
+  const pastAttempts = saveQuizAttempt(setTitle, quizScore, quizDeck.length, pct);
+  const trendHtml = buildQuizTrendHtml(pastAttempts, pct);
+
   quizProgress.textContent = "Quiz complete";
   quizTimerEl.textContent = "";
   quizScoreLabel.textContent = "";
@@ -731,6 +739,7 @@ function renderQuizSummary() {
       <div>You scored</div>
       <div class="score-big">${quizScore} / ${quizDeck.length}</div>
       <div>${pct}% correct</div>
+      ${trendHtml}
       <button id="quizRetryBtn" class="secondary-btn" style="margin-top:16px;">🔁 Try Again</button>
     </div>
   `;
@@ -741,6 +750,81 @@ function renderQuizSummary() {
     quizScore = 0;
     renderQuizQuestion();
   });
+}
+
+// ---------------------------------------------------------------
+// QUIZ PERFORMANCE TRACKING (per set, saved in this browser)
+// ---------------------------------------------------------------
+
+const QUIZ_HISTORY_KEY = "quiz_performance_history";
+const MAX_ATTEMPTS_PER_SET = 20;
+
+function loadQuizHistory() {
+  try {
+    const raw = localStorage.getItem(QUIZ_HISTORY_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (err) {
+    return {};
+  }
+}
+
+// Saves this attempt and returns the PAST attempts for this set
+// (not including the one just saved), most recent first.
+function saveQuizAttempt(setTitle, score, total, pct) {
+  const allHistory = loadQuizHistory();
+  const pastAttempts = (allHistory[setTitle] || []).slice();
+
+  const newAttempt = {
+    timestamp: new Date().toISOString(),
+    score: score,
+    total: total,
+    pct: pct
+  };
+
+  const updated = [newAttempt, ...pastAttempts].slice(0, MAX_ATTEMPTS_PER_SET);
+  allHistory[setTitle] = updated;
+
+  try {
+    localStorage.setItem(QUIZ_HISTORY_KEY, JSON.stringify(allHistory));
+  } catch (err) {
+    // Storage full or unavailable - fail silently, this is a nice-to-have
+  }
+
+  return pastAttempts;
+}
+
+function buildQuizTrendHtml(pastAttempts, currentPct) {
+  if (pastAttempts.length === 0) {
+    return `<div class="quiz-trend-note">First attempt on this set — nice work getting started!</div>`;
+  }
+
+  const lastAttempt = pastAttempts[0];
+  const diff = currentPct - lastAttempt.pct;
+
+  let trendLine;
+  if (diff > 0) {
+    trendLine = `<span class="trend-up">▲ Up ${diff}%</span> from your last attempt (${lastAttempt.pct}%)`;
+  } else if (diff < 0) {
+    trendLine = `<span class="trend-down">▼ Down ${Math.abs(diff)}%</span> from your last attempt (${lastAttempt.pct}%)`;
+  } else {
+    trendLine = `Same as your last attempt (${lastAttempt.pct}%)`;
+  }
+
+  const bestPct = Math.max(currentPct, ...pastAttempts.map((a) => a.pct));
+  const attemptCount = pastAttempts.length + 1;
+
+  const recentList = pastAttempts
+    .slice(0, 4)
+    .map((a) => `<li>${a.score}/${a.total} (${a.pct}%) · ${formatRelativeTime(a.timestamp)}</li>`)
+    .join("");
+
+  return `
+    <div class="quiz-trend-note">
+      ${trendLine}<br>
+      Attempt #${attemptCount} on this set · Best so far: ${bestPct}%
+      <ul class="quiz-trend-list">${recentList}</ul>
+    </div>
+  `;
 }
 
 quizModeBtn.addEventListener("click", openQuizMode);
